@@ -9,12 +9,13 @@ async function configureCouchbaseDb(app) {
   }
   const couchbaseUsername = app.get('COUCHBASE_USERNAME');
   const couchbasePassword = app.get('COUCHBASE_PASSWORD');
-
-  const cluster = new couchbase.Cluster(couchbaseUrl, {
+  const initBucket = app.get('COUCHBASE_INIT_BUCKET') || 'init-bucket';
+  const cluster = await couchbase.Cluster.connect(couchbaseUrl, {
     username: couchbaseUsername,
     password: couchbasePassword,
   });
 
+  cluster.bucket(initBucket);
   app.set('COUCHBASE', cluster);
 
 

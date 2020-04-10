@@ -1,26 +1,15 @@
 /* eslint-disable no-await-in-loop */
 const { uuid } = require('@e2/commons');
 const { services, allStatus } = require('../constants');
+const { getOrCreateBucket, getCourseBucketName } = require('../utils/couchbase-utils');
 const CourseSync = require('./course');
 
 
 async function getCoursesBuckets(courseIds, couchbase) {
-  const couchbaseBucketManager = couchbase.buckets();
   const courseBuckets = {};
   for (const courseId of courseIds) {
-    const bucketName = `COURSE_${courseId}`;
-    let bucket = null;
-    try {
-      bucket = couchbase.bucket(bucketName);
-    } catch (e) {
-      if (await couchbaseBucketManager.createBucket({
-        name: bucketName,
-        flushEnabled: true,
-        ramQuotaMB: 128,
-      })) {
-        bucket = couchbase.bucket(bucketName);
-      }
-    }
+    const bucketName = getCourseBucketName(courseId);
+    const bucket = await getOrCreateBucket({ bucketName, couchbase });
     courseBuckets[courseId] = bucket;
   }
   return courseBuckets;
@@ -35,7 +24,7 @@ async function upsertAllRecords({ courseId, bucket, allRecords = [] }) {
     }));
     return { courseId, status: true };
   }
-  return { courseId, status: false };
+  return { [courseId]: false };
 }
 
 async function syncActiveCourses(app) {
@@ -54,9 +43,13 @@ async function syncActiveCourses(app) {
     const courseSync = new CourseSync(app, course.id);
     const allRecords = await courseSync.getAllCourseRecords();
     app.info(`Got records for (${course.id}) - ${course.name}: ${allRecords.length}`);
+    const { bucket, isCreated, bucketName } = coursesBuckets[course.id];
+    if (isCreated === true) {
+      app.info(`Bucket ${bucketName}: ${isCreated}`);
+    }
     const result = await upsertAllRecords({
       courseId: course.id,
-      bucket: coursesBuckets[course.id],
+      bucket,
       allRecords,
     });
     app.info(`Records updated for (${course.id}) - ${course.name}`, result);
@@ -76,10 +69,10 @@ async function syncCourses(app) {
         await startSync();
       }, 5 * 60 * 1000);
     }).catch((err) => {
-      app.error('Error occurred during sync', err);
+      app.error('Error occurred during sync', err.message);
       timeout = setTimeout(async () => {
         await startSync();
-      }, 5 * 60 * 1000);
+      }, 5 * 60 * 60 * 1000);
     });
   }
 
