@@ -1,9 +1,16 @@
 const axios = require('axios');
 const { constants: { systemUserToken } } = require('@e2/commons');
+const SyncGateway = require('./sync-gateway');
+const { services } = require('../constants');
 
 
 const registerServices = (app) => {
-  const serviceNames = ['EXAM_SERVICE', 'SCHOOL_SERVICE', 'USER_PROGRESS_SERVICE', 'COURSE_SERVICE'];
+  const serviceNames = [
+    services.EXAM_SERVICE,
+    services.SCHOOL_SERVICE,
+    services.USER_PROGRESS_SERVICE,
+    services.COURSE_SERVICE,
+  ];
   serviceNames.forEach((serviceName) => {
     const serviceUrl = app.get(serviceName);
     if (serviceUrl) {
@@ -16,6 +23,8 @@ const registerServices = (app) => {
       app.info(`Configured service ${serviceName}`);
     }
   });
+  const syncGateway = new SyncGateway(app);
+  app.set(services.SYNC_GATEWAY_SERVICE, syncGateway);
 };
 
 module.exports = registerServices;

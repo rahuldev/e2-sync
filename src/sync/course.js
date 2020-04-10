@@ -1,4 +1,6 @@
-const { services, programTypes, allStatus } = require('../constants');
+const {
+  services, programTypes, allStatus, entities,
+} = require('../constants');
 
 
 class CourseSync {
@@ -12,7 +14,7 @@ class CourseSync {
   async getAllCourseRecords() {
     try {
       const { data: course } = await this.courseService.get(`/courses/${this.courseId}`);
-      course.entityType = 'COURSE';
+      course.entityType = entities.COURSE;
       const modules = await this.getModules();
       const moduleLessons = await this.getModuleLessons(modules.map(x => x.id));
       const scheduleGroups = await this.getSchedules();
@@ -28,7 +30,7 @@ class CourseSync {
       const { data: modules } = await this.courseService.get(`/modules?courseId=${this.courseId}&programType=${programType}&limit=1000`);
       return modules.data.map(x => ({
         ...x,
-        entityType: 'MODULE',
+        entityType: entities.MODULE,
       }));
     } catch (e) {
       this.app.error(e);
@@ -48,7 +50,7 @@ class CourseSync {
       });
       return moduleLessons.data.map(x => ({
         ...x,
-        entityType: 'MODULE_LESSON',
+        entityType: entities.MODULE_LESSON,
       }));
     } catch (e) {
       this.app.error(e);
@@ -68,7 +70,7 @@ class CourseSync {
       });
       return scheduleGroups.data.map(x => ({
         ...x,
-        entityType: 'SCHEDULE_GROUP',
+        entityType: entities.SCHEDULE_GROUP,
       }));
     } catch (e) {
       this.app.error(e);

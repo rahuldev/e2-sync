@@ -26,11 +26,13 @@ async function getOrCreateBucket({ bucketName, couchbase }) {
     });
   }
   const bucket = couchbase.bucket(bucketName);
-  return { isCreated, bucket, bucketName };
+  return {
+    created: isCreated, existing: bucketExists, bucket, bucketName,
+  };
 }
 
 function getCourseBucketName(courseId) {
-  return `COURSE_${courseId}`;
+  return `course_${courseId}`.split('-').join('_');
 }
 
 module.exports = { getOrCreateBucket, getCourseBucketName, checkBucketExist };

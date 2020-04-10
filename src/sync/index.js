@@ -1,11 +1,12 @@
 /* eslint-disable no-await-in-loop */
 const { uuid } = require('@e2/commons');
-const { services, allStatus } = require('../constants');
+const { services, allStatus, entities } = require('../constants');
 const { getOrCreateBucket, getCourseBucketName } = require('../utils/couchbase-utils');
 const CourseSync = require('./course');
 
 
-async function getCoursesBuckets(courseIds, couchbase) {
+async function getCoursesBuckets(app, { courseIds }) {
+  const couchbase = app.get('COUCHBASE');
   const courseBuckets = {};
   for (const courseId of courseIds) {
     const bucketName = getCourseBucketName(courseId);
@@ -17,7 +18,9 @@ async function getCoursesBuckets(courseIds, couchbase) {
 
 async function upsertAllRecords({ courseId, bucket, allRecords = [] }) {
   if (bucket != null && allRecords.length) {
-    allRecords.push({ id: courseId, updatedAt: new Date().toJSON(), entityType: 'LAST_UPDATE' });
+    allRecords.push({
+      id: courseId, updatedAt: new Date().toJSON(), entityType: entities.LAST_UPDATE,
+    });
     await Promise.all(allRecords.map((record) => {
       const recordId = `${record.entityType}::${record.id}` || uuid();
       return bucket.defaultCollection().upsert(recordId, record);
@@ -32,11 +35,11 @@ async function syncActiveCourses(app) {
   const { data: { data: courses = [] } = {} } = await courseService.get('/courses', {
     params: {
       status: allStatus.ACTIVE,
+      limit: 2,
     },
   });
-    /** @type {import("couchbase").Cluster} */
-  const couchbase = app.get('COUCHBASE');
-  const coursesBuckets = await getCoursesBuckets(courses.map(x => x.id), couchbase);
+  const coursesBuckets = await getCoursesBuckets(app,
+    { courseIds: courses.map(x => x.id) });
   const results = [];
   for (const course of courses) {
     app.info(`Getting records for (${course.id}) - ${course.name}`);

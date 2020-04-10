@@ -3,6 +3,7 @@ const services = {
   SCHOOL_SERVICE: 'SCHOOL_SERVICE',
   USER_PROGRESS_SERVICE: 'USER_PROGRESS_SERVICE',
   COURSE_SERVICE: 'COURSE_SERVICE',
+  SYNC_GATEWAY_SERVICE: 'SYNC_GATEWAY_SERVICE',
 };
 
 const programTypes = {
@@ -15,8 +16,17 @@ const allStatus = {
   ACTIVE: 'ACTIVE',
 };
 
+const entities = {
+  COURSE: 'COURSE',
+  MODULE: 'MODULE',
+  MODULE_LESSON: 'MODULE_LESSON',
+  LAST_UPDATE: 'LAST_UPDATE',
+  SCHEDULE_GROUP: 'SCHEDULE_GROUP',
+};
+
 module.exports = {
   services,
   programTypes,
   allStatus,
+  entities,
 };
