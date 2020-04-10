@@ -12,7 +12,7 @@ class SyncGateway {
       throw new Error('Sync gateway url not set');
     }
     /** @type {import("axios").AxiosInstance} */
-    this.axios = axios.create({
+    this.syncGateway = axios.create({
       baseURL: syncGatewayUrl,
       timeout: 2 * 60 * 1000,
     });
@@ -21,7 +21,7 @@ class SyncGateway {
   async addSyncDatabase({ databaseName }) {
     this.app.info(`Adding ${databaseName} in sync server`);
     try {
-      await this.axios.put(`/${databaseName}`, {
+      await this.syncGateway.put(`/${databaseName}/`, {
         server: this.couchbaseSyncUrl,
         bucket: databaseName,
         username: this.couchbaseSyncUsername,
@@ -33,7 +33,6 @@ class SyncGateway {
       this.app.info(`Added ${databaseName} in sync server`);
       return { created: true, existing: false };
     } catch (e) {
-      console.log(e);
       const { response } = e;
       if (response.status === 412) {
         return { created: false, existing: true };
@@ -45,10 +44,10 @@ class SyncGateway {
     }
   }
 
-  async addSyncDatabaseUser({ databaseName, user }) {
+  async addSyncDatabaseUser({ databaseName, user }, retry = false) {
     const { username, password } = user;
     try {
-      const { status } = await this.axios.put(`/${databaseName}/_user/${username}`, {
+      const { status } = await this.syncGateway.put(`/${databaseName}/_user/${username}`, {
         name: username,
         password,
       });
@@ -57,11 +56,18 @@ class SyncGateway {
       }
       return { created: false, existing: true, databaseExists: true };
     } catch (e) {
+      console.log(e);
       const { response } = e;
       if (response.status === 409) {
         return { created: false, existing: true, databaseExists: true };
       }
       if (response.status === 404) {
+        this.app.info(`Trying to create database: ${databaseName}`);
+        const databaseStatus = await this.addSyncDatabase({ databaseName });
+        console.log(databaseStatus);
+        if ((databaseStatus.created || databaseStatus.existing) && !retry) {
+          return this.addSyncDatabaseUser({ databaseName, user }, true);
+        }
         return { created: false, existing: false, databaseExists: false };
       }
       return { created: false, existing: false, databaseExists: false };

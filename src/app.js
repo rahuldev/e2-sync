@@ -11,8 +11,8 @@ const { name, version } = packageJson;
 const app = createApp({
   name,
   version,
-  configurations: [configureCouchbaseDb, configureServices],
-  plugins: [registerServices, syncCourses],
+  configurations: [configureCouchbaseDb, registerServices, configureServices],
+  plugins: [syncCourses],
   migrations,
 });
 

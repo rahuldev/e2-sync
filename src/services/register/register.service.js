@@ -43,11 +43,7 @@ class RegisterService {
     });
     const record = await this.collection.get(id);
     const { value } = record;
-    const syncBucketExists = await checkBucketExist({
-      bucketName: value.syncBucket,
-      couchbase: this.couchbase,
-    });
-    return { ...value, syncBucketExists };
+    return { ...value };
   }
 }
 

@@ -5,6 +5,15 @@ const { getOrCreateBucket, getCourseBucketName } = require('../utils/couchbase-u
 const CourseSync = require('./course');
 
 
+async function registerBucketSync(app, buckets) {
+  const syncGatewayService = app.get(services.SYNC_GATEWAY_SERVICE);
+  for (const bucket of Object.values(buckets)) {
+    if (bucket.created || bucket.existing) {
+      await syncGatewayService.addSyncDatabase({ databaseName: bucket.bucketName });
+    }
+  }
+}
+
 async function getCoursesBuckets(app, { courseIds }) {
   const couchbase = app.get('COUCHBASE');
   const courseBuckets = {};
@@ -13,6 +22,7 @@ async function getCoursesBuckets(app, { courseIds }) {
     const bucket = await getOrCreateBucket({ bucketName, couchbase });
     courseBuckets[courseId] = bucket;
   }
+  registerBucketSync(app, courseBuckets);
   return courseBuckets;
 }
 
