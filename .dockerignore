@@ -1,0 +1,34 @@
+./scripts
+
+# Node.js
+node_modules
+
+# Docker data directory
+.data
+
+# IDEs and editors (shamelessly copied from @angular/cli's .gitignore)
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
+
+### OSX ###
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+### Windows ###
+# Windows thumbnail cache files
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
